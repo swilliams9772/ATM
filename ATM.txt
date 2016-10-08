@@ -1,0 +1,952 @@
+#include <iostream>
+#include <fstream>
+#include <cstring>
+#include <string>
+#include <sstream>
+
+using namespace std;
+
+ofstream out_file("out.9", ios::out);
+
+class BANCO_EASIER{
+
+   public:      // public interfaces for this class
+	BANCO_EASIER(string, string);// constructor
+	void ACTIVATE(string); // a method;
+
+   private:
+	// NEW PRIVATE FUNCTIONS:
+	int TRANSFER_MONEY(string, string, int, int);
+	void GENERATE_REPORT(string, int);
+	void DRAW_SUPER_MENU(); 
+	void PRINT_LINE(int, string); 
+	void SORT_CUSTOMERS(int); 
+
+	// EXISTING PRIVATE FUNCTIONS FROM PROJECTS 7 AND 8:
+	int DEPOSIT(string, int, int); // private func to deposit money
+	int WITHDRAW(string, int, int); // private func to withdraw money
+	void DRAW_WELCOME(); // private func to draw welcome
+	void DRAW_MENU(); // private func to draw menu
+	int FIND_CUSTOMER(int, int); // private func to find balance
+	int GET_BALANCE(string, int); // private func to find balance
+	int CHANGE_PIN(int, int); // private func to change PIN
+
+	string NAME; // var to store name of the section
+	string BRANCH_NAME; // var to store name of the section
+	int NOOF_CUSTOMERS; // var to store the number of customers
+	int ACCOUNT_NO[50]; // int array for account numbers (50 max)
+	int PIN[50]; // int array for PINs (50 max)
+	int CHECKING_BALANCE[50];// int array for checking account balance
+	int SAVINGS_BALANCE[50]; // int array for savings account balance
+	float AVERAGE_BALANCE[50]; // Average daily balance for each customer
+	string FIRST_NAMES[50]; // string array for first names
+	string LAST_NAMES[50]; // string array for last names
+};
+
+BANCO_EASIER::BANCO_EASIER(string  str_1, string str_2)
+{
+	int i;
+
+	NAME = str_1;
+
+	char file_name[80];
+	strcpy(file_name, str_2.c_str());
+	ifstream in_file(file_name,ios::in);
+
+	in_file >> NOOF_CUSTOMERS;
+	for(i = 0; i < NOOF_CUSTOMERS; i++)
+	{
+		in_file >> FIRST_NAMES[i] >> LAST_NAMES[i]
+			>> ACCOUNT_NO[i] >> PIN[i]
+			>> CHECKING_BALANCE[i]
+			>> SAVINGS_BALANCE[i];
+	}
+
+ 	cout << " AN OBJECT CALLED " << str_1 << " IS CREATED." << endl;
+	cout << " THERE ARE " << NOOF_CUSTOMERS << " CUSTOMERS IN " 
+		<< NAME << endl;
+ 	out_file << " AN OBJECT CALLED " << str_1 << " IS CREATED." << endl;
+	out_file << " THERE ARE " << NOOF_CUSTOMERS << " CUSTOMERS IN " 
+		<< NAME << endl;
+}
+
+void
+BANCO_EASIER::ACTIVATE(string  str_3)
+{
+	int USER_ACCT_NO, USER_PIN;
+	int USER_ENTRY_INT = 0;
+	int USER_NEW_PIN_FIRST;
+	int USER_NEW_PIN_SECOND;
+	int USER_BALANCE;
+	int RET_VALUE;
+	string USER_ENTRY_STR, USER_ENTRY_STR_2;
+	int cust_pos;
+
+	BRANCH_NAME = str_3;
+
+	DRAW_WELCOME();
+	cout << " ENTER ACCOUNT NUMBER" << endl;
+	out_file << " ENTER ACCOUNT NUMBER" << endl;
+	cin >> USER_ACCT_NO;
+	cout << " ENTER PIN" << endl;
+	out_file << " ENTER PIN" << endl;
+	cin >> USER_PIN;
+
+	cust_pos = FIND_CUSTOMER(USER_ACCT_NO, USER_PIN);
+	if (cust_pos == -1)
+	{
+ 		cout << " NO SUCH CUSTOMER. GOOD BYE." << endl;
+ 		out_file << " NO SUCH CUSTOMER. GOOD BYE." << endl;
+	}
+	else if (cust_pos == -9)
+	{
+		// supervisor account; draw a different menu
+		cout << " HELLO SUPERVISOR " << endl;
+		out_file << " HELLO SUPERVISOR " << endl;
+		DRAW_SUPER_MENU();
+
+		while(USER_ENTRY_INT != 3)
+		{
+			USER_ENTRY_INT = 0;
+			USER_ENTRY_STR = "";
+			cin >> USER_ENTRY_INT;
+			if (USER_ENTRY_INT == 1)
+			{
+				SORT_CUSTOMERS(1);
+			}
+			else if (USER_ENTRY_INT == 2)
+			{
+				SORT_CUSTOMERS(2);
+			}
+			else if (USER_ENTRY_INT == 3)
+			{
+ 				cout << " GOOD BYE SUPERVISOR. HAVE A SUPER DAY." << endl;
+ 				out_file << " GOOD BYE SUPERVISOR. HAVE A SUPER DAY." << endl;
+			}
+			else
+			{
+				cout << " INVALID SUPERVISOR ENTRY." << endl;
+				out_file << " INVALID SUPERVISOR ENTRY." << endl;
+				break;
+			}
+		}// end supervisory while
+	}
+	else
+	{
+		cout << " HELLO " << LAST_NAMES[cust_pos] << ", "
+			<< FIRST_NAMES[cust_pos] << endl;
+		out_file << " HELLO " << LAST_NAMES[cust_pos] << ", "
+			<< FIRST_NAMES[cust_pos] << endl;
+		DRAW_MENU();
+
+		while(USER_ENTRY_INT != 8)
+		{
+			USER_ENTRY_INT = 0;
+			USER_ENTRY_STR = "";
+			cin >> USER_ENTRY_INT;
+			if (USER_ENTRY_INT == 1)
+			{
+ 				cout << " WHAT TYPE OF ACCOUNT? (CHECKING OR SAVINGS)" << endl;
+ 				out_file << " WHAT TYPE OF ACCOUNT? (CHECKING OR SAVINGS)" << endl;
+				cin >> USER_ENTRY_STR;
+				if (USER_ENTRY_STR == "CHECKING")
+				{
+					USER_BALANCE = GET_BALANCE("CHECKING", cust_pos); 
+ 					cout << " YOUR CHECKING BALANCE IS " 
+						<< USER_BALANCE << " USD." << endl;
+ 					out_file << " YOUR CHECKING BALANCE IS " 
+						<< USER_BALANCE << " USD." << endl;
+				}
+				else if (USER_ENTRY_STR == "SAVINGS")
+				{
+					USER_BALANCE = GET_BALANCE("SAVINGS", cust_pos); 
+ 					cout << " YOUR SAVINGS BALANCE IS " 
+						<< USER_BALANCE << " USD." << endl;
+ 					out_file << " YOUR SAVINGS BALANCE IS " 
+						<< USER_BALANCE << " USD." << endl;
+				}
+				else
+				{
+ 					cout << " INVALID USER ENTRY." << endl;
+ 					out_file << " INVALID USER ENTRY." << endl;
+					break;
+				}
+			}
+			else if (USER_ENTRY_INT == 2)
+			{
+ 				cout << " ENTER NEW PIN:" << endl;
+ 				out_file << " ENTER NEW PIN:" << endl;
+				cin >> USER_NEW_PIN_FIRST;
+ 				cout << " ENTER NEW PIN AGAIN:" << endl;
+ 				out_file << " ENTER NEW PIN AGAIN:" << endl;
+				cin >> USER_NEW_PIN_SECOND;
+				RET_VALUE = CHANGE_PIN(USER_NEW_PIN_FIRST, USER_NEW_PIN_SECOND); 
+				if (RET_VALUE == 1)
+				{
+					PIN[cust_pos] = USER_NEW_PIN_FIRST;
+					cout << " YOUR PIN HAS BEEN CHANGED." << endl;
+					out_file << " YOUR PIN HAS BEEN CHANGED." << endl;
+				}
+				else if (RET_VALUE == 0)
+				{
+					cout << " YOUR PIN HAS NOT BEEN CHANGED."
+						<< " TWO ENTRIES DO NOT MATCH." << endl;
+					out_file << " YOUR PIN HAS NOT BEEN CHANGED."
+						<< " TWO ENTRIES DO NOT MATCH." << endl;
+				}
+				else{}// empty else case
+			}
+			else if (USER_ENTRY_INT == 3)
+			{
+ 				cout << " WHAT TYPE OF ACCOUNT? (CHECKING OR SAVINGS)" << endl;
+ 				out_file << " WHAT TYPE OF ACCOUNT? (CHECKING OR SAVINGS)" << endl;
+				cin >> USER_ENTRY_STR;
+				if (USER_ENTRY_STR == "CHECKING")
+				{
+ 					cout << " HOW MUCH TO DEPOSIT?" << endl;
+ 					out_file << " HOW MUCH TO DEPOSIT?" << endl;
+					cin >> USER_ENTRY_INT;
+					USER_BALANCE = DEPOSIT("CHECKING", cust_pos, USER_ENTRY_INT); 
+ 					cout << " YOUR CHECKING BALANCE IS " 
+						<< USER_BALANCE << " USD." << endl;
+ 					out_file << " YOUR CHECKING BALANCE IS " 
+						<< USER_BALANCE << " USD." << endl;
+				}
+				else if (USER_ENTRY_STR == "SAVINGS")
+				{
+ 					cout << " HOW MUCH TO DEPOSIT?" << endl;
+ 					out_file << " HOW MUCH TO DEPOSIT?" << endl;
+					cin >> USER_ENTRY_INT;
+					USER_BALANCE = DEPOSIT("SAVINGS", cust_pos, USER_ENTRY_INT); 
+ 					cout << " YOUR SAVINGS BALANCE IS " 
+						<< USER_BALANCE << " USD." << endl;
+ 					out_file << " YOUR SAVINGS BALANCE IS " 
+						<< USER_BALANCE << " USD." << endl;
+				}
+				else
+				{
+ 					cout << " INVALID USER ENTRY." << endl;
+ 					out_file << " INVALID USER ENTRY." << endl;
+					break;
+				}
+			}
+			else if (USER_ENTRY_INT == 4)
+			{
+ 				cout << " WHAT TYPE OF ACCOUNT? (CHECKING OR SAVINGS)" << endl;
+ 				out_file << " WHAT TYPE OF ACCOUNT? (CHECKING OR SAVINGS)" << endl;
+				cin >> USER_ENTRY_STR;
+				if (USER_ENTRY_STR == "CHECKING")
+				{
+ 					cout << " HOW MUCH TO WITHDRAW (MULTIPLES OF 10 PLEASE)?" << endl;
+ 					out_file << " HOW MUCH TO WITHDRAW (MULTIPLES OF 10 PLEASE)?" << endl;
+					cin >> USER_ENTRY_INT;
+					if ((USER_ENTRY_INT % 10) != 0)
+					{
+ 						cout << " INVALID USER ENTRY." << endl;
+ 						out_file << " INVALID USER ENTRY." << endl;
+						break;
+					}
+					else
+					{
+						RET_VALUE = WITHDRAW("CHECKING", cust_pos, USER_ENTRY_INT);
+						if (RET_VALUE == -1) 
+						{
+ 							cout << " INSUFFICIENT FUNDS." << endl;
+ 							out_file << " INSUFFICIENT FUNDS." << endl;
+						}
+						else
+						{
+ 							cout << " ENJOY YOUR MONEY." << endl;
+ 							out_file << " ENJOY YOUR MONEY." << endl;
+						}
+					}
+				}
+				else if (USER_ENTRY_STR == "SAVINGS")
+				{
+ 					cout << " HOW MUCH TO WITHDRAW (MULTIPLES OF 10 PLEASE)?" << endl;
+ 					out_file << " HOW MUCH TO WITHDRAW (MULTIPLES OF 10 PLEASE)?" << endl;
+					cin >> USER_ENTRY_INT;
+					if ((USER_ENTRY_INT % 10) != 0)
+					{
+ 						cout << " INVALID USER ENTRY." << endl;
+ 						out_file << " INVALID USER ENTRY." << endl;
+						break;
+					}
+					else
+					{
+						RET_VALUE = WITHDRAW("SAVINGS", cust_pos, USER_ENTRY_INT);
+						if (RET_VALUE == -1) 
+						{
+ 							cout << " INSUFFICIENT FUNDS." << endl;
+ 							out_file << " INSUFFICIENT FUNDS." << endl;
+						}
+						else
+						{
+ 							cout << " ENJOY YOUR MONEY." << endl;
+ 							out_file << " ENJOY YOUR MONEY." << endl;
+						}
+					}
+				}
+				else
+				{
+ 					cout << " INVALID USER ENTRY." << endl;
+ 					out_file << " INVALID USER ENTRY." << endl;
+					break;
+				}
+			}
+			else if (USER_ENTRY_INT == 5)
+			{
+ 				cout << " FROM WHAT TYPE OF ACCOUNT? (CHECKING OR SAVINGS)" << endl;
+ 				out_file << " FROM WHAT TYPE OF ACCOUNT? (CHECKING OR SAVINGS)" << endl;
+				cin >> USER_ENTRY_STR;
+
+ 				cout << " TO WHAT TYPE OF ACCOUNT? (CHECKING OR SAVINGS)" << endl;
+ 				out_file << " TO WHAT TYPE OF ACCOUNT? (CHECKING OR SAVINGS)" << endl;
+				cin >> USER_ENTRY_STR_2;
+
+ 				cout << " HOW MUCH TO TRANSFER? (MULTIPLES OF 10 PLEASE)" << endl;
+ 				out_file << " HOW MUCH TO TRANSFER? (MULTIPLES OF 10 PLEASE)" << endl;
+				cin >> USER_ENTRY_INT;
+				if ((USER_ENTRY_STR != "CHECKING" && USER_ENTRY_STR != "SAVINGS")
+					|| (USER_ENTRY_STR_2 != "CHECKING" && USER_ENTRY_STR_2 != "SAVINGS")
+					|| (USER_ENTRY_STR == USER_ENTRY_STR_2)
+					|| (USER_ENTRY_INT % 10 != 0))
+				{
+ 					cout << " INVALID USER ENTRY." << endl;
+ 					out_file << " INVALID USER ENTRY." << endl;
+					break;
+				}
+				else
+				{
+					RET_VALUE = TRANSFER_MONEY(USER_ENTRY_STR, USER_ENTRY_STR_2, cust_pos, USER_ENTRY_INT);
+					if (RET_VALUE == -1) 
+					{
+ 						cout << " INSUFFICIENT FUNDS." << endl;
+ 						out_file << " INSUFFICIENT FUNDS." << endl;
+					}
+					else
+					{
+
+ 						cout << " TRANSFER COMPLETE. THERE WAS 2 USD SERVICE CHARGE" << endl;
+ 						cout << " CHECKING BALANCE: " << CHECKING_BALANCE[cust_pos] << " USD. SAVINGS BALANCE: "
+							<< SAVINGS_BALANCE[cust_pos] << " USD" << endl;
+ 						out_file << " TRANSFER COMPLETE. THERE WAS 2 USD SERVICE CHARGE" << endl;
+ 						out_file << " CHECKING BALANCE: " << CHECKING_BALANCE[cust_pos] << " USD. SAVINGS BALANCE: "
+							<< SAVINGS_BALANCE[cust_pos] << " USD" << endl;
+					}
+				}
+			}
+			else if (USER_ENTRY_INT == 6)
+			{
+				cout << " REPORT FOR WHAT TYPE OF ACCOUNT? (CHECKING, SAVINGS OR BOTH)" << endl;
+				out_file << " REPORT FOR WHAT TYPE OF ACCOUNT? (CHECKING, SAVINGS OR BOTH)" << endl;
+				cin >> USER_ENTRY_STR;
+
+				if (USER_ENTRY_STR != "CHECKING" && USER_ENTRY_STR != "SAVINGS" 
+					&& USER_ENTRY_STR != "BOTH")
+				{
+ 					cout << " INVALID USER ENTRY." << endl;
+ 					out_file << " INVALID USER ENTRY." << endl;
+					break;
+				}
+				else
+				{
+					GENERATE_REPORT(USER_ENTRY_STR, cust_pos);
+				}
+			}
+			else if (USER_ENTRY_INT == 7)
+			{
+				DRAW_MENU();
+			}
+			else if (USER_ENTRY_INT == 8)
+			{
+ 				cout << " GOOD BYE " << LAST_NAMES[cust_pos] << ", "
+					<< FIRST_NAMES[cust_pos] << "." 
+					<< " HAVE A NICE DAY." << endl;
+ 				out_file << " GOOD BYE " << LAST_NAMES[cust_pos] << ", "
+					<< FIRST_NAMES[cust_pos] << "." 
+					<< " HAVE A NICE DAY." << endl;
+			}
+			else
+			{
+				cout << " INVALID USER ENTRY." << endl;
+				out_file << " INVALID USER ENTRY." << endl;
+				break;
+			}
+		}// end while
+	}
+} // end ACTIVATE
+
+// BELOW ARE THE DEFINITIONS OF PRIVATE FUNCTIONS THAT CAN ONLY BE CALLED 
+// FROM WITHIN METHODS AND NOT FROM MAIN PROGRAMS
+
+// definition of private function DRAW_SUPER_MENU
+// input parameters: none
+// this function draws the supervisor menu
+void
+BANCO_EASIER::DRAW_SUPER_MENU()
+{
+ 	cout << " SUPERVISORSUPERVISORSUERPVISOR" << endl;
+ 	cout << " S                            S" << endl;
+ 	cout << " S SUPERVISOR REPORTS:        S" << endl;
+	cout << " S PRESS 1: SORTED BY NAME    S" << endl;
+	cout << " S PRESS 2: SORTED BY BALANCE S" << endl;
+ 	cout << " S PRESS 3: TO QUIT           S" << endl;
+ 	cout << " S                            S" << endl;
+ 	cout << " SUPERVISORSUPERVISORSUERPVISOR" << endl;
+
+ 	out_file << " SUPERVISORSUPERVISORSUERPVISOR" << endl;
+ 	out_file << " S                            S" << endl;
+ 	out_file << " S SUPERVISOR REPORTS:        S" << endl;
+	out_file << " S PRESS 1: SORTED BY NAME    S" << endl;
+	out_file << " S PRESS 2: SORTED BY BALANCE S" << endl;
+ 	out_file << " S PRESS 3: TO QUIT           S" << endl;
+ 	out_file << " S                            S" << endl;
+ 	out_file << " SUPERVISORSUPERVISORSUERPVISOR" << endl;
+}
+
+// definition of private function DRAW_MENU
+// input parameters: none
+// this function draws the menu
+void
+BANCO_EASIER::DRAW_MENU()
+{
+ 	cout << " $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
+ 	cout << " $                                $" << endl;
+ 	cout << " $ PRESS 1 TO GET ACCOUNT BALANCE $" << endl;
+ 	cout << " $ PRESS 2 TO CHANGE PIN          $" << endl;
+ 	cout << " $ PRESS 3 TO DEPOSIT MONEY       $" << endl;
+ 	cout << " $ PRESS 4 TO WITHDRAW MONEY      $" << endl;
+ 	cout << " $ PRESS 5 TO TRANSFER MONEY      $" << endl;
+ 	cout << " $ PRESS 6 TO GENERATE REPORT     $" << endl;
+ 	cout << " $ PRESS 7 TO REDRAW MENU         $" << endl;
+ 	cout << " $ PRESS 8 TO QUIT                $" << endl;
+ 	cout << " $                                $" << endl;
+ 	cout << " $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
+
+ 	out_file << " $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
+ 	out_file << " $                                $" << endl;
+ 	out_file << " $ PRESS 1 TO GET ACCOUNT BALANCE $" << endl;
+ 	out_file << " $ PRESS 2 TO CHANGE PIN          $" << endl;
+ 	out_file << " $ PRESS 3 TO DEPOSIT MONEY       $" << endl;
+ 	out_file << " $ PRESS 4 TO WITHDRAW MONEY      $" << endl;
+ 	out_file << " $ PRESS 5 TO TRANSFER MONEY      $" << endl;
+ 	out_file << " $ PRESS 6 TO GENERATE REPORT     $" << endl;
+ 	out_file << " $ PRESS 7 TO REDRAW MENU         $" << endl;
+ 	out_file << " $ PRESS 8 TO QUIT                $" << endl;
+ 	out_file << " $                                $" << endl;
+ 	out_file << " $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
+}
+
+// definition of private function SORT_CUSTOMERS
+// input parameters: integer x
+// if x == 1, sort by last name in alphabetical order
+// if x == 2, sort by total balance in descending order (max first)
+// sorting is in ascending order
+// this function then prints sorted customers on screen and into a file
+void
+BANCO_EASIER::SORT_CUSTOMERS(int x)
+{
+	string BALANCE_STR;
+	stringstream CONVERT;
+	string TEXT_TO_PRINT;
+	int i, j;
+	int MIN, MIN_POS, MAX, MAX_POS, TEMP;
+	string MIN_NAME, TEMP_NAME;
+
+	if (x == 1)
+	{
+		for(i = 0; i < NOOF_CUSTOMERS; i++)
+		{
+			MIN_NAME = LAST_NAMES[i];
+			MIN_POS = i;
+			for(j = i; j < NOOF_CUSTOMERS; j++)
+			{
+				if (MIN_NAME > LAST_NAMES[j])
+				{
+					MIN_NAME = LAST_NAMES[j];
+					MIN_POS = j;
+				}
+				else {}
+			}
+			// swap LAST NAMES
+			TEMP_NAME = LAST_NAMES[i];
+			LAST_NAMES[i] = LAST_NAMES[MIN_POS];
+			LAST_NAMES[MIN_POS] = TEMP_NAME;
+
+			// swap FIRST NAMES
+			TEMP_NAME = FIRST_NAMES[i];
+			FIRST_NAMES[i] = FIRST_NAMES[MIN_POS];
+			FIRST_NAMES[MIN_POS] = TEMP_NAME;
+
+			// swap ACCT NO 
+			TEMP = ACCOUNT_NO[i];
+			ACCOUNT_NO[i] = ACCOUNT_NO[MIN_POS];
+			ACCOUNT_NO[MIN_POS] = TEMP;
+
+			// swap PIN 
+			TEMP = PIN[i];
+			PIN[i] = PIN[MIN_POS];
+			PIN[MIN_POS] = TEMP;
+
+			// swap CHECKING BALANCE
+			TEMP = CHECKING_BALANCE[i];
+			CHECKING_BALANCE[i] = CHECKING_BALANCE[MIN_POS];
+			CHECKING_BALANCE[MIN_POS] = TEMP;
+
+			// swap SAVINGS BALANCE
+			TEMP = SAVINGS_BALANCE[i];
+			SAVINGS_BALANCE[i] = SAVINGS_BALANCE[MIN_POS];
+			SAVINGS_BALANCE[MIN_POS] = TEMP;
+		}
+	}
+	else if (x == 2)
+	{
+		for(i = 0; i < NOOF_CUSTOMERS; i++)
+		{
+			MAX = CHECKING_BALANCE[i] + SAVINGS_BALANCE[i];
+			MAX_POS = i;
+			for(j = i; j < NOOF_CUSTOMERS; j++)
+			{
+				if (MAX < (CHECKING_BALANCE[j] + SAVINGS_BALANCE[j]))
+				{
+					MAX = CHECKING_BALANCE[j] + SAVINGS_BALANCE[j];
+					MAX_POS = j;
+				}
+				else {}
+			}
+			// swap LAST NAMES
+			TEMP_NAME = LAST_NAMES[i];
+			LAST_NAMES[i] = LAST_NAMES[MAX_POS];
+			LAST_NAMES[MAX_POS] = TEMP_NAME;
+
+			// swap FIRST NAMES
+			TEMP_NAME = FIRST_NAMES[i];
+			FIRST_NAMES[i] = FIRST_NAMES[MAX_POS];
+			FIRST_NAMES[MAX_POS] = TEMP_NAME;
+
+			// swap ACCT NO 
+			TEMP = ACCOUNT_NO[i];
+			ACCOUNT_NO[i] = ACCOUNT_NO[MAX_POS];
+			ACCOUNT_NO[MAX_POS] = TEMP;
+
+			// swap PIN 
+			TEMP = PIN[i];
+			PIN[i] = PIN[MAX_POS];
+			PIN[MAX_POS] = TEMP;
+
+			// swap CHECKING BALANCE
+			TEMP = CHECKING_BALANCE[i];
+			CHECKING_BALANCE[i] = CHECKING_BALANCE[MAX_POS];
+			CHECKING_BALANCE[MAX_POS] = TEMP;
+
+			// swap SAVINGS BALANCE
+			TEMP = SAVINGS_BALANCE[i];
+			SAVINGS_BALANCE[i] = SAVINGS_BALANCE[MAX_POS];
+			SAVINGS_BALANCE[MAX_POS] = TEMP;
+		}
+	}
+	else{}
+
+	// print report
+
+	//        12345678901234567890123456789012345678901234 = 44
+	cout << " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl; 
+	out_file << " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl; 
+
+	PRINT_LINE(NAME.length(), NAME);
+
+	PRINT_LINE(BRANCH_NAME.length(), BRANCH_NAME);
+		
+	for(i = 0; i < NOOF_CUSTOMERS; i++)
+	{
+		TEXT_TO_PRINT = "CUSTOMER: " + LAST_NAMES[i] + ", " + FIRST_NAMES[i];
+		PRINT_LINE(TEXT_TO_PRINT.length(), TEXT_TO_PRINT);
+
+		//1. Add the integer balance to the stringstream object
+		//2. Change this string stream to string
+		CONVERT.str(""); // clear the contents of CONVERT stream
+		CONVERT << CHECKING_BALANCE[i];
+		BALANCE_STR = CONVERT.str();
+		TEXT_TO_PRINT = "CHECKING BALANCE: " + BALANCE_STR + " USD";
+		PRINT_LINE(TEXT_TO_PRINT.length(), TEXT_TO_PRINT);
+
+		//1. Add the integer balance to the stringstream object
+		//2. Change this string stream to string
+		CONVERT.str(""); // clear the contents of CONVERT stream
+		CONVERT << SAVINGS_BALANCE[i];
+		BALANCE_STR = CONVERT.str();
+		TEXT_TO_PRINT = "SAVINGS BALANCE: " + BALANCE_STR + " USD";
+		PRINT_LINE(TEXT_TO_PRINT.length(), TEXT_TO_PRINT);
+	}
+	TEXT_TO_PRINT = "HAVE A SUPER DAY SUPERVISOR"; 
+	PRINT_LINE(TEXT_TO_PRINT.length(), TEXT_TO_PRINT );
+
+	cout << " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl; 
+	out_file << " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl; 
+}
+
+
+// definition of private function PRINT_LINE
+// input parameters:
+// integer x is the indentation from left
+// string print_text is the text to be printed
+// this function prints one line with % signs at the end such that the
+// total length of the line is 40 characters.
+void
+BANCO_EASIER::PRINT_LINE(int x, string print_text)
+{
+	int i;
+
+	cout << " %% " << print_text << " "; 
+	out_file << " %% " << print_text << " "; 
+	for (i = 0; i < (40 - x); i++)
+	{
+		cout << "%";
+		out_file << "%";
+	}
+	cout << endl;
+	out_file << endl;
+}
+
+
+// definition of private function GENERATE_REPORT
+// input parameters:
+// string acc_type is either CHECKING, SAVINGS or BOTH; 
+// integer pos is the customer position
+// this function generates a report for this customer 
+void
+BANCO_EASIER::GENERATE_REPORT(string acc_type, int pos)
+{
+	int i;
+	string BALANCE_STR;
+	stringstream CONVERT;
+	string TEXT_TO_PRINT;
+
+	//        12345678901234567890123456789012345678901234 = 44
+	cout << " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl; 
+	out_file << " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl; 
+
+	PRINT_LINE(NAME.length(), NAME);
+
+	PRINT_LINE(BRANCH_NAME.length(), BRANCH_NAME);
+		
+	if (acc_type == "CHECKING")
+	{
+		//1. Add the integer balance to the stringstream object
+		//2. Change this string stream to string
+		CONVERT << CHECKING_BALANCE[pos];
+		BALANCE_STR = CONVERT.str();
+		TEXT_TO_PRINT = "YOUR CHECKING BALANCE: " + BALANCE_STR + " USD";
+		PRINT_LINE(TEXT_TO_PRINT.length(), TEXT_TO_PRINT);
+
+		//TEXT_TO_PRINT = "HAVE A NICE DAY " + LAST_NAMES[pos] + " " + FIRST_NAMES[pos] + " ";
+		//PRINT_LINE(TEXT_TO_PRINT.length(), TEXT_TO_PRINT );
+	}
+	else if (acc_type == "SAVINGS")
+	{
+		//1. Add the integer balance to the stringstream object
+		//2. Change this string stream to string
+		CONVERT << SAVINGS_BALANCE[pos];
+		BALANCE_STR = CONVERT.str();
+		TEXT_TO_PRINT = "YOUR SAVINGS BALANCE: " + BALANCE_STR + " USD";
+		PRINT_LINE(TEXT_TO_PRINT.length(), TEXT_TO_PRINT);
+
+		//TEXT_TO_PRINT = "HAVE A NICE DAY " + LAST_NAMES[pos] + " " + FIRST_NAMES[pos] + " ";
+		//PRINT_LINE(TEXT_TO_PRINT.length(), TEXT_TO_PRINT );
+	}
+	else if (acc_type == "BOTH")
+	{
+		//1. Add the integer balance to the stringstream object
+		//2. Change this string stream to string
+		CONVERT << CHECKING_BALANCE[pos];
+		BALANCE_STR = CONVERT.str();
+		TEXT_TO_PRINT = "YOUR CHECKING BALANCE: " + BALANCE_STR + " USD";
+		PRINT_LINE(TEXT_TO_PRINT.length(), TEXT_TO_PRINT);
+
+		//1. Add the integer balance to the stringstream object
+		//2. Change this string stream to string
+		CONVERT.str(""); // clear the contents of CONVERT stream
+		CONVERT << SAVINGS_BALANCE[pos];
+		BALANCE_STR = CONVERT.str();
+		TEXT_TO_PRINT = "YOUR SAVINGS BALANCE: " + BALANCE_STR + " USD";
+		PRINT_LINE(TEXT_TO_PRINT.length(), TEXT_TO_PRINT);
+	}
+	else{}
+
+	TEXT_TO_PRINT = "HAVE A NICE DAY " + LAST_NAMES[pos] + " " + FIRST_NAMES[pos] + " ";
+	PRINT_LINE(TEXT_TO_PRINT.length(), TEXT_TO_PRINT );
+
+	cout << " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl; 
+	out_file << " %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << endl; 
+}
+
+// definition of private function TRANSFER_MONEY
+// input parameters:
+// string s4 is either CHECKING or SAVINGS; 
+// integer x is the customer position
+// integer y is the amount to deposit 
+// this function subtracts (y+2) from checking or savings balance;
+// it returns 1 is transfer is successful; returns -1 otherwise;
+int
+BANCO_EASIER::TRANSFER_MONEY(string from_acc, string to_acc, int pos, int amount)
+{
+	if (amount < 0) {
+		cout << " NICE TRICK!" << endl;
+		out_file << " NICE TRICK!" << endl;
+		return -1;
+	}
+	if (from_acc == "CHECKING" && to_acc == "SAVINGS")
+	{
+		if ((CHECKING_BALANCE[pos] - amount - 2) >= 0)
+		{
+			CHECKING_BALANCE[pos] = CHECKING_BALANCE[pos] - amount - 2; 
+			SAVINGS_BALANCE[pos] +=  amount;
+			return 1;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	else if (from_acc == "SAVINGS" && to_acc == "CHECKING")
+	{
+		if ((SAVINGS_BALANCE[pos] - amount - 2) >= 0)
+		{
+			SAVINGS_BALANCE[pos] = SAVINGS_BALANCE[pos] - amount - 2; 
+			CHECKING_BALANCE[pos] +=  amount;
+			return 1;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	else{} // something strange; else should never be reached here;
+}
+
+// definition of private function DEPOSIT
+// input parameters:
+// string s4 is either CHECKING or SAVINGS; 
+// integer x is the customer position
+// integer y is the amount to deposit 
+// this function adds y to checking or savings balance
+// it returns the final balance value;
+int
+BANCO_EASIER::DEPOSIT(string s4, int x, int y)
+{
+	if (y < 0) {
+		cout << " NICE TRICK!" << endl;
+		out_file << " NICE TRICK!" << endl;
+		return 0;
+	}
+	if (s4 == "CHECKING")
+	{
+		CHECKING_BALANCE[x] = CHECKING_BALANCE[x] + y; 
+		return CHECKING_BALANCE[x];
+	}
+	else if (s4 == "SAVINGS")
+	{
+		SAVINGS_BALANCE[x] = SAVINGS_BALANCE[x] + y; 
+		return SAVINGS_BALANCE[x];
+	}
+	else{}
+}
+
+// definition of private function WITHDRAW
+// input parameters:
+// string s4 is either CHECKING or SAVINGS; 
+// integer x is the customer position
+// integer y is the amount to deposit 
+// this function subtracts (y+2) from checking or savings balance
+// it returns the final balance value;
+int
+BANCO_EASIER::WITHDRAW(string s4, int x, int y)
+{
+	if (y < 0) {
+		cout << " NICE TRICK!" << endl;
+		out_file << " NICE TRICK!" << endl;
+		return -1;
+	}
+	if (s4 == "CHECKING")
+	{
+		if ((CHECKING_BALANCE[x] - y - 2) >= 0)
+		{
+			CHECKING_BALANCE[x] = CHECKING_BALANCE[x] - y - 2; 
+			return CHECKING_BALANCE[x];
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	else if (s4 == "SAVINGS")
+	{
+		if ((SAVINGS_BALANCE[x] - y - 2) >= 0)
+		{
+			SAVINGS_BALANCE[x] = SAVINGS_BALANCE[x] - y - 2; 
+			return SAVINGS_BALANCE[x];
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	else{}
+}
+
+// definition of private function GET_BALANCE
+// string s4 is either CHECKING or SAVINGS; 
+// integer w is the customer position
+// this function returns the balance of checking or savings account
+int
+BANCO_EASIER::GET_BALANCE(string s4, int w)
+{
+	if (s4 == "CHECKING")
+	{
+		return CHECKING_BALANCE[w];
+	}
+	else if ("SAVINGS")
+	{
+		return SAVINGS_BALANCE[w];
+	}
+	else{}
+}
+
+
+// definition of private function FIND_CUSTOMER
+// input parameters:
+// integer y is the account number 
+// integer z is the PIN; 
+// this function returns the customer position in private array ACCOUNT_NO; 
+// or it returns -1 if no such customer;
+int
+BANCO_EASIER::FIND_CUSTOMER(int y, int z) 
+{
+	int i;
+	int FOUND = 0;
+	int FOUND_POS = -1;
+
+	if(y == 9999 && z == -99)
+	{
+		return -9; // supervisor login
+
+	}
+	for(i= 0; i < NOOF_CUSTOMERS && FOUND == 0; i++)
+	{
+		if (y == ACCOUNT_NO[i] && z == PIN[i])
+		{
+			FOUND = 1;
+			FOUND_POS = i;
+		}
+		else
+		{}
+	}
+	if (FOUND == 1)
+	{
+		return FOUND_POS;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+// definition of private function CHANGE_PIN
+// input parameters:
+// integers v and z are the first and second user entries for new pin
+// return value:
+// this function returns 0 (if v and z are not equal) or 1 (if v == z) 
+int
+BANCO_EASIER::CHANGE_PIN(int v, int z)
+{
+	int i;
+
+	if (v != z)
+	{
+		// TWO ENTRIES DO NOT MATCH.
+		return 0;
+	}
+	else 
+	{
+		// YOUR PIN HAS BEEN CHANGED.
+		return 1;
+
+	}
+}
+
+// definition of private function DRAW_WELCOME
+// input parameters: none
+// this function draws the welcome menu (centers the names)
+void
+BANCO_EASIER::DRAW_WELCOME()
+{
+ 	int i, LENGTH_NAME, WHITE_SPACE, FRONT_BLANK, END_BLANK;
+	string THIRD_LINE, FOURTH_LINE;
+
+	// put 34 $ signs
+	cout << " $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
+	out_file << " $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
+	// put 2 $ signs and 32 spaces 
+	cout << " $                                $" << endl;
+	out_file << " $                                $" << endl;
+	
+	LENGTH_NAME = NAME.length();
+	WHITE_SPACE = 32 - LENGTH_NAME;
+	if ((WHITE_SPACE % 2) == 0)
+	{
+		FRONT_BLANK = WHITE_SPACE / 2;
+		END_BLANK = WHITE_SPACE / 2;
+	}
+	else
+	{
+		FRONT_BLANK = (WHITE_SPACE / 2) + 1;
+		END_BLANK = WHITE_SPACE / 2;
+	}
+//cout << " LENGTH_NAME IS " << LENGTH_NAME << endl;
+//cout << " WHITE SPACE IS " << WHITE_SPACE 
+//	<< " FRONT " << FRONT_BLANK << " END " << END_BLANK << endl;
+	THIRD_LINE = "$";
+	for (i = 0; i < FRONT_BLANK; i++)
+	{
+		THIRD_LINE = THIRD_LINE + " ";
+	}
+	THIRD_LINE = THIRD_LINE + NAME;
+	for (i = 0; i < END_BLANK; i++)
+	{
+		THIRD_LINE = THIRD_LINE + " ";
+	}
+	THIRD_LINE = THIRD_LINE + "$";
+	cout << " " << THIRD_LINE << endl;
+	out_file << " " << THIRD_LINE << endl;
+
+	LENGTH_NAME = BRANCH_NAME.length();
+	WHITE_SPACE = 32 - LENGTH_NAME;
+	if ((WHITE_SPACE % 2) == 0)
+	{
+		FRONT_BLANK = WHITE_SPACE / 2;
+		END_BLANK = WHITE_SPACE / 2;
+	}
+	else
+	{
+		FRONT_BLANK = (WHITE_SPACE / 2) + 1;
+		END_BLANK = WHITE_SPACE / 2;
+	}
+	FOURTH_LINE = "$";
+	for (i = 0; i < FRONT_BLANK; i++)
+	{
+		FOURTH_LINE = FOURTH_LINE + " ";
+	}
+	FOURTH_LINE = FOURTH_LINE + BRANCH_NAME;
+	for (i = 0; i < END_BLANK; i++)
+	{
+		FOURTH_LINE = FOURTH_LINE + " ";
+	}
+	FOURTH_LINE += "$";
+	cout << " " << FOURTH_LINE << endl;
+	cout << " $                                $" << endl;
+	cout << " $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
+	out_file << " " << FOURTH_LINE << endl;
+	out_file << " $                                $" << endl;
+	out_file << " $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << endl;
+}
